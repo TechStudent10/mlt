@@ -47,6 +47,8 @@ int usleep(unsigned int useconds)
 }
 
 
+// sans nanosleep
+#if 0
 int nanosleep( const struct timespec * rqtp, struct timespec * rmtp )
 {
 	if (rqtp->tv_nsec > 999999999) {
@@ -55,7 +57,8 @@ int nanosleep( const struct timespec * rqtp, struct timespec * rmtp )
 		return -1;
 	}
 	return usleep( rqtp->tv_sec * 1000000 + rqtp->tv_nsec / 1000 );
-} 
+}
+#endif
 
 int setenv(const char *name, const char *value, int overwrite)
 {
