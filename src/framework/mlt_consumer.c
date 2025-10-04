@@ -93,73 +93,17 @@ static void mlt_thread_join(mlt_consumer self);
 static void consumer_read_ahead_start(mlt_consumer self);
 
 
-#if defined(_WIN32)
+// #if defined(_WIN32)
 // so like i cannot be bothered anymore
-// https://mingw.googlesource.com/mingw-w64/+/refs/heads/master/mingw-w64-libraries/winpthreads/src/cond.c
-static int
-pthread_cond_timedwait_impl (pthread_cond_t *c, pthread_mutex_t *external_mutex, const struct _timespec64 *t, int rel)
-{
-  sCondWaitHelper ch;
-  DWORD dwr;
-  int r;
-  cond_t *_c;
-  /* pthread_testcancel(); */
-  if (!c || !*c)
-    return EINVAL;
-  _c = (cond_t *)*c;
-  if (_c == (cond_t *)PTHREAD_COND_INITIALIZER)
-  {
-    r = cond_static_init(c);
-    if (r && r != EBUSY)
-      return r;
-    _c = (cond_t *) *c;
-  } else if ((_c)->valid != (unsigned int)LIFE_COND)
-    return EINVAL;
-  if (rel == 0)
-  {
-    dwr = dwMilliSecs(_pthread_rel_time_in_ms(t));
-  }
-  else
-  {
-    dwr = dwMilliSecs(_pthread_time_in_ms_from_timespec(t));
-  }
-tryagain:
-  r = do_sema_b_wait (_c->sema_b, 0, INFINITE,&_c->waiters_b_lock_,&_c->value_b);
-  if (r != 0)
-    return r;
-  if (!TryEnterCriticalSection (&_c->waiters_count_lock_))
-  {
-    r = do_sema_b_release (_c->sema_b, 1,&_c->waiters_b_lock_,&_c->value_b);
-    if (r != 0)
-      return r;
-    sched_yield();
-    goto tryagain;
-  }
-  _c->waiters_count_++;
-  LeaveCriticalSection(&_c->waiters_count_lock_);
-  r = do_sema_b_release (_c->sema_b, 1,&_c->waiters_b_lock_,&_c->value_b);
-  if (r != 0)
-    return r;
-  ch.c = _c;
-  ch.r = &r;
-  ch.external_mutex = external_mutex;
-  {
-    pthread_cleanup_push(cleanup_wait, (void *) &ch);
-    r = pthread_mutex_unlock(external_mutex);
-    if (!r)
-      r = do_sema_b_wait (_c->sema_q, 0, dwr,&_c->waiters_q_lock_,&_c->value_q);
-    pthread_cleanup_pop(1);
-  }
-  return r;
-}
+extern int pthread_cond_timedwait64(pthread_cond_t *cv, pthread_mutex_t *external_mutex, const struct _timespec64 *t);
 
-// https://mingw.googlesource.com/mingw-w64/+/refs/heads/master/mingw-w64-libraries/winpthreads/src/cond.c
-int
-pthread_cond_timedwait64(pthread_cond_t *c, pthread_mutex_t *m, const struct _timespec64 *t)
-{
-  return pthread_cond_timedwait_impl(c, m, t, 0);
-}
-#endif
+// // https://mingw.googlesource.com/mingw-w64/+/refs/heads/master/mingw-w64-libraries/winpthreads/src/cond.c
+// int
+// pthread_cond_timedwait64(pthread_cond_t *c, pthread_mutex_t *m, const struct _timespec64 *t)
+// {
+//   return pthread_cond_timedwait_impl(c, m, t, 0);
+// }
+// #endif
 
 /** Initialize a consumer service.
  *
@@ -661,7 +605,7 @@ int mlt_consumer_put_frame(mlt_consumer self, mlt_frame frame)
             gettimeofday(&now, NULL);
             tm.tv_sec = now.tv_sec + 1;
             tm.tv_nsec = now.tv_usec * 1000;
-            pthread_cond_timedwait(&priv->put_cond, &priv->put_mutex, &tm);
+            pthread_cond_timedwait64(&priv->put_cond, &priv->put_mutex, &tm);
         }
         mlt_properties_set_int(MLT_CONSUMER_PROPERTIES(self), "put_pending", 0);
         if (priv->put_active && priv->put == NULL)
@@ -706,7 +650,7 @@ mlt_frame mlt_consumer_get_frame(mlt_consumer self)
             gettimeofday(&now, NULL);
             tm.tv_sec = now.tv_sec + 1;
             tm.tv_nsec = now.tv_usec * 1000;
-            pthread_cond_timedwait(&priv->put_cond, &priv->put_mutex, &tm);
+            pthread_cond_timedwait64(&priv->put_cond, &priv->put_mutex, &tm);
         }
         frame = priv->put;
         priv->put = NULL;
