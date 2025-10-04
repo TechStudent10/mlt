@@ -95,7 +95,7 @@ static void consumer_read_ahead_start(mlt_consumer self);
 
 // #if defined(_WIN32)
 // so like i cannot be bothered anymore
-extern int pthread_cond_timedwait64(pthread_cond_t *cv, pthread_mutex_t *external_mutex, const struct _timespec64 *t);
+extern int pthread_cond_timedwait64(pthread_cond_t *cv, pthread_mutex_t *external_mutex, const struct timespec *t);
 
 // // https://mingw.googlesource.com/mingw-w64/+/refs/heads/master/mingw-w64-libraries/winpthreads/src/cond.c
 // int
