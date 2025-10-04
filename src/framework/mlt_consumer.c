@@ -93,18 +93,6 @@ static void mlt_thread_join(mlt_consumer self);
 static void consumer_read_ahead_start(mlt_consumer self);
 
 
-// #if defined(_WIN32)
-// so like i cannot be bothered anymore
-extern int pthread_cond_timedwait64(pthread_cond_t *cv, pthread_mutex_t *external_mutex, const struct timespec *t);
-
-// // https://mingw.googlesource.com/mingw-w64/+/refs/heads/master/mingw-w64-libraries/winpthreads/src/cond.c
-// int
-// pthread_cond_timedwait64(pthread_cond_t *c, pthread_mutex_t *m, const struct _timespec64 *t)
-// {
-//   return pthread_cond_timedwait_impl(c, m, t, 0);
-// }
-// #endif
-
 /** Initialize a consumer service.
  *
  * \public \memberof mlt_consumer_s
@@ -605,7 +593,7 @@ int mlt_consumer_put_frame(mlt_consumer self, mlt_frame frame)
             gettimeofday(&now, NULL);
             tm.tv_sec = now.tv_sec + 1;
             tm.tv_nsec = now.tv_usec * 1000;
-            pthread_cond_timedwait64(&priv->put_cond, &priv->put_mutex, &tm);
+            pthread_cond_timedwait(&priv->put_cond, &priv->put_mutex, &tm);
         }
         mlt_properties_set_int(MLT_CONSUMER_PROPERTIES(self), "put_pending", 0);
         if (priv->put_active && priv->put == NULL)
@@ -650,7 +638,7 @@ mlt_frame mlt_consumer_get_frame(mlt_consumer self)
             gettimeofday(&now, NULL);
             tm.tv_sec = now.tv_sec + 1;
             tm.tv_nsec = now.tv_usec * 1000;
-            pthread_cond_timedwait64(&priv->put_cond, &priv->put_mutex, &tm);
+            pthread_cond_timedwait(&priv->put_cond, &priv->put_mutex, &tm);
         }
         frame = priv->put;
         priv->put = NULL;
