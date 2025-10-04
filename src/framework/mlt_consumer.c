@@ -92,6 +92,8 @@ static void mlt_thread_create(mlt_consumer self, mlt_thread_function_t function)
 static void mlt_thread_join(mlt_consumer self);
 static void consumer_read_ahead_start(mlt_consumer self);
 
+
+#if defined(_WIN32)
 // so like i cannot be bothered anymore
 // https://mingw.googlesource.com/mingw-w64/+/refs/heads/master/mingw-w64-libraries/winpthreads/src/cond.c
 static int
@@ -157,6 +159,7 @@ pthread_cond_timedwait64(pthread_cond_t *c, pthread_mutex_t *m, const struct _ti
 {
   return pthread_cond_timedwait_impl(c, m, t, 0);
 }
+#endif
 
 /** Initialize a consumer service.
  *
